@@ -1,32 +1,26 @@
-name: ImageCrawl
+name: Daily Crawl
 on:
-  workflow_dispatch:
   schedule:
-    - cron: '0 8 * * *'
+    - cron: '0 0 * * *'  # 每天0点运行
+  workflow_dispatch:
 
 jobs:
-  run:
+  crawl:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set Python
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
-
+          python-version: '3.10'
       - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run crawler
+        run: python crawl_images.py
+      - name: Commit and push
         run: |
-          pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
-          pip install requests beautifulsoup4
-
-      - name: Execute crawl script
-        run: python crawl.py
-
-      - name: Commit and push changes
-        run: |
-          git config user.name bot
-          git config user.email bot@qq.com
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add image_links.json
-          git commit -m "Update image links data" || true
+          git commit -m "Update image links"
           git push
