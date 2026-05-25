@@ -2,7 +2,7 @@ name: ImageCrawl
 on:
   workflow_dispatch:
   schedule:
-    cron: '0 8 * * *'
+    - cron: '0 8 * * *'
 
 jobs:
   run:
@@ -15,18 +15,18 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Install dep
+      - name: Install dependencies
         run: |
-          pip config set index-url https://pypi.tuna.tsinghua.edu.cn/simple
+          pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
           pip install requests beautifulsoup4
 
-      - name: Run crawl
+      - name: Execute crawl script
         run: python crawl.py
 
-      - name: Save file
+      - name: Commit and push changes
         run: |
           git config user.name bot
           git config user.email bot@qq.com
           git add image_links.json
-          git commit -m "update images" || true
+          git commit -m "Update image links data" || true
           git push
