@@ -1,36 +1,32 @@
-name: 国内IP图片抓取
+name: ImageCrawl
 on:
   workflow_dispatch:
   schedule:
-    - cron: 0 9 * * *
+    cron: '0 8 * * *'
 
 jobs:
-  crawl-task:
+  run:
     runs-on: ubuntu-latest
     steps:
-      - name: 拉取仓库代码
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: 配置国内清华镜像源
-        run: |
-          pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
-          pip config set global.trusted-host pypi.tuna.tsinghua.edu.cn
-
-      - name: 搭建Python3.11环境
+      - name: Set Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.10"
 
-      - name: 安装项目依赖
-        run: pip install -r requirements.txt
+      - name: Install dep
+        run: |
+          pip config set index-url https://pypi.tuna.tsinghua.edu.cn/simple
+          pip install requests beautifulsoup4
 
-      - name: 执行图片抓取脚本
+      - name: Run crawl
         run: python crawl.py
 
-      - name: 提交更新文件
+      - name: Save file
         run: |
-          git config --global user.name "AutoBot"
-          git config --global user.email "bot@github.com"
+          git config user.name bot
+          git config user.email bot@qq.com
           git add image_links.json
-          git commit -m "自动更新图片链接文件" || echo "无文件变更无需提交"
+          git commit -m "update images" || true
           git push
