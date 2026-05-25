@@ -1,26 +1,43 @@
-name: Daily Crawl
+name: 国内代理IP抓取图片
 on:
-  schedule:
-    - cron: '0 0 * * *'  # 每天0点运行
   workflow_dispatch:
+  schedule:
+    - cron: 0 9 * * *
 
 jobs:
-  crawl:
+  crawl-task:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      # 配置国内pip镜像，加速依赖安装
+      - name: 切换清华源
+        run: pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+
+      - name: 初始化Python环境
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
-      - name: Install dependencies
+          python-version: 3.11
+
+      # 配置http/https代理，转发至国内IP节点
+      - name: 设置国内代理IP
+        env:
+          HTTP_PROXY: ${{ secrets.CHINA_PROXY }}
+          HTTPS_PROXY: ${{ secrets.CHINA_PROXY }}
+        run: echo "已启用国内代理访问"
+
+      - name: 安装依赖库
         run: pip install -r requirements.txt
-      - name: Run crawler
-        run: python crawl_images.py
-      - name: Commit and push
+
+      - name: 执行图片链接抓取
+        run: python crawl.py
+
+      # 提交更新文件
+      - name: 提交结果文件
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "ChinaIP-Spider"
+          git config user.email "spider@cn.local"
           git add image_links.json
-          git commit -m "Update image links"
+          git commit -m "国内代理IP更新图片链接"
           git push
