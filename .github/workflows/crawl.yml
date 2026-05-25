@@ -1,4 +1,4 @@
-name: 国内代理IP抓取图片
+name: 国内IP图片抓取
 on:
   workflow_dispatch:
   schedule:
@@ -8,36 +8,29 @@ jobs:
   crawl-task:
     runs-on: ubuntu-latest
     steps:
-      - name: 检出代码
+      - name: 拉取仓库代码
         uses: actions/checkout@v4
 
-      # 配置国内pip镜像，加速依赖安装
-      - name: 切换清华源
-        run: pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+      - name: 配置国内清华镜像源
+        run: |
+          pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+          pip config set global.trusted-host pypi.tuna.tsinghua.edu.cn
 
-      - name: 初始化Python环境
+      - name: 搭建Python3.11环境
         uses: actions/setup-python@v5
         with:
-          python-version: 3.11
+          python-version: "3.11"
 
-      # 配置http/https代理，转发至国内IP节点
-      - name: 设置国内代理IP
-        env:
-          HTTP_PROXY: ${{ secrets.CHINA_PROXY }}
-          HTTPS_PROXY: ${{ secrets.CHINA_PROXY }}
-        run: echo "已启用国内代理访问"
-
-      - name: 安装依赖库
+      - name: 安装项目依赖
         run: pip install -r requirements.txt
 
-      - name: 执行图片链接抓取
+      - name: 执行图片抓取脚本
         run: python crawl.py
 
-      # 提交更新文件
-      - name: 提交结果文件
+      - name: 提交更新文件
         run: |
-          git config user.name "ChinaIP-Spider"
-          git config user.email "spider@cn.local"
+          git config --global user.name "AutoBot"
+          git config --global user.email "bot@github.com"
           git add image_links.json
-          git commit -m "国内代理IP更新图片链接"
+          git commit -m "自动更新图片链接文件" || echo "无文件变更无需提交"
           git push
